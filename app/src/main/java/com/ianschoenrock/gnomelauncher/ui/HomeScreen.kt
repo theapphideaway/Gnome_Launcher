@@ -3,15 +3,13 @@ package com.ianschoenrock.gnomelauncher.ui
 import android.content.Intent
 import android.content.pm.ResolveInfo
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Colors
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -33,6 +32,8 @@ import com.ianschoenrock.gnomelauncher.ui.theme.darkCard
 @Composable
 fun HomeScreen(){
     val showAppDrawer = remember { mutableStateOf(false) }
+    val showMenu = remember { mutableStateOf(false)}
+    val selectedIndex = remember { mutableStateOf(0)}
     val context = LocalContext.current
     val pManager = context.packageManager
     val mainIntent = Intent(Intent.ACTION_MAIN, null)
@@ -104,34 +105,65 @@ fun HomeScreen(){
                 cells = GridCells.Adaptive(minSize = 120.dp)
             ) {
                 items(myApps.size) { index ->
-                    Column(verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally) {
-                        Image(
-                            painter = rememberDrawablePainter(
-                                drawable = myApps[index].activityInfo.loadIcon(
-                                    pManager
-                                )
-                            ),
-                            contentDescription = "app_icon",
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .size(60.dp)
-                                .clickable {
-                                    val clickedIntent =
-                                        pManager.getLaunchIntentForPackage(myApps[index].activityInfo.packageName.toString())
-                                    println(myApps[index].activityInfo.packageName)
-                                    context.startActivity(clickedIntent)
-                                }
-                        )
-                        Text(
-                            myApps[index].loadLabel(pManager).toString(),
-                            style = TextStyle(
-                                fontSize = 18.sp,
+                    Row() {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                painter = rememberDrawablePainter(
+                                    drawable = myApps[index].activityInfo.loadIcon(
+                                        pManager
+                                    )
+                                ),
+                                contentDescription = "app_icon",
+                                modifier = Modifier
+                                    .padding(16.dp)
+                                    .size(60.dp)
+                                    .clickable {
+                                        val clickedIntent =
+                                            pManager.getLaunchIntentForPackage(myApps[index].activityInfo.packageName.toString())
+                                        println(myApps[index].activityInfo.packageName)
+                                        context.startActivity(clickedIntent)
+                                    }.pointerInput(Unit) {
+                                        detectTapGestures(
+                                            onLongPress = {
+                                                selectedIndex.value = index
+                                                showMenu.value = true
+                                            }
+                                        )
+                                    }
+                            )
+                            Text(
+                                myApps[index].loadLabel(pManager).toString(),
+                                style = TextStyle(
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = Color.White
+                                ),
                                 textAlign = TextAlign.Center,
-                                color = Color.White),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth())
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
+                    if(showMenu.value && selectedIndex.value == index){
+                        DropdownMenu(
+                            expanded = showMenu.value,
+                            onDismissRequest = { showMenu.value = false }
+                        ) {
+                            DropdownMenuItem(onClick = {}) {
+                                Text("Add to Home")
+                            }
+                            DropdownMenuItem(onClick = {}) {
+                                Text("Info")
+                            }
+                            Divider()
+                            DropdownMenuItem(onClick = {}) {
+                                Text("Uninstall")
+                            }
+                        }
+                    }
+
                 }
             }
         }
