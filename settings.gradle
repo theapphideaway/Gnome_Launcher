@@ -17,5 +17,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Gnome Launcher"
+rootProject.name = "Gnome_Launcher"
 include ':app'
